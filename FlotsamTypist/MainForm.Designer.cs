@@ -31,6 +31,7 @@
             this.TextOverlay = new WinFormsControls.TransparentLabel();
             this.TypewriterPhrase = new WinFormsControls.TransparentLabel();
             this.Underliner = new WinFormsControls.TransparentLabel();
+            this.KeyboardHint = new WinFormsControls.TransparentLabel();
             this.SuspendLayout();
             // 
             // TextOverlay
@@ -67,6 +68,17 @@
             this.Underliner.TabStop = false;
             this.Underliner.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
             // 
+            // KeyboardHint
+            // 
+            this.KeyboardHint.Font = new System.Drawing.Font("Consolas", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.KeyboardHint.ForeColor = System.Drawing.Color.Orange;
+            this.KeyboardHint.Location = new System.Drawing.Point(28, 5);
+            this.KeyboardHint.Name = "KeyboardHint";
+            this.KeyboardHint.Size = new System.Drawing.Size(20, 27);
+            this.KeyboardHint.TabIndex = 2;
+            this.KeyboardHint.TabStop = false;
+            this.KeyboardHint.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 13F);
@@ -76,6 +88,7 @@
             this.Controls.Add(this.TextOverlay);
             this.Controls.Add(this.TypewriterPhrase);
             this.Controls.Add(this.Underliner);
+            this.Controls.Add(this.KeyboardHint);
             this.Font = new System.Drawing.Font("Verdana", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.KeyPreview = true;
@@ -93,6 +106,7 @@
         private WinFormsControls.TransparentLabel TypewriterPhrase;
         private WinFormsControls.TransparentLabel Underliner;
         private WinFormsControls.TransparentLabel TextOverlay;
+        private WinFormsControls.TransparentLabel KeyboardHint;
     }
 }
 
