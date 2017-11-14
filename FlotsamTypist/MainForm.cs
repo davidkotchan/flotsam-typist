@@ -18,10 +18,14 @@ namespace FlotsamTypist
 
         public const string UNDERBAR = "_";
 
+        public const int MIN_NUM_CHARS = 4;
+        public const int MAX_NUM_CHARS = 120;
+
         public string FullTypewriterPhraseText { get; set; }
 
         public bool EscapeClosesApplication { get; set; }
         public bool ShowKeyboardHint { get; set; }
+        public int NumCharactersToDisplay { get; set; }
 
         // rand.Next( 5, 10 ) ==> 5, 6, 7, 8, 9 at random; not "10", 10 is exclusive upper bound.
         // rand.Next( 5 ) ==> 0, 1, 2, 3, 4 at random, similarly.
@@ -31,21 +35,28 @@ namespace FlotsamTypist
         {
             InitializeComponent();
 
-            // Have {Esc} close the app is convenient, but if you're practicing typing and
+            // Having {Esc} close the app is convenient, but if you're practicing typing and
             // keep hitting {Esc} accidentally when reaching for the '~' or '1' keys, it very
-            // quickly gets annoying.  Also the user to turn it off.
+            // quickly gets annoying.  Allow the user to turn it off.
             EscapeClosesApplication = AppSettings.Get< bool >( "EscapeClosesApplication", true );
 
-            // Sometimes you can get "stuck" on a character: you repeatedly mis-type it and
-            // can't figure out what's wrong.  For me, the '{' '}' '-' '=' keys are particulary
-            // problematic this way.  Prefer to NOT have to glance down at the keyboard to
-            // reorient; instead, have an option for displaying the key you're hitting.
+            // Sometimes you can get "stuck" on a character: you repeatedly mistype it
+            // and can't figure out what's wrong.  For me, the '{' '}' '-' '=' keys are
+            // particularly problematic this way.  Prefer to NOT have to glance down at the
+            // keyboard to reorient; instead, have an option for displaying the key you're
+            // hitting.
             ShowKeyboardHint = AppSettings.Get< bool >( "ShowKeyboardHint" );
             if (ShowKeyboardHint)
             {
                 const int shiftAmount = 6;      // shift down a little, make room for the keyboard hint text (aesthetics)
                 ShiftDisplayTextsVerticallyBy( shiftAmount );
             }
+
+            NumCharactersToDisplay = DetermineNumCharsToDisplay();
+
+            // Scale the display window to correctly show that number of monospace characters.
+            SetTextPhraseWidths( NumCharactersToDisplay );
+            SetFormDisplayWidth( NumCharactersToDisplay );
 
             DoAnotherPhrase();
         }
@@ -54,18 +65,21 @@ namespace FlotsamTypist
         {
             FullTypewriterPhraseText = "";
 
-            // int howLongTypewriterPhrase = rand.Next( 5, 11 );    // Hmm. Doesn't work that well in practice.
-            int howLongTypewriterPhrase = 14;
+            // int howLongTypewriterPhrase = rand.Next( 5, 11 );    // Hmm. Interesting idea, but doesn't work that well in practice.
+            int howLongTypewriterPhrase = NumCharactersToDisplay;
 
             for (int j = 0; j < howLongTypewriterPhrase; ++j)
             {
                 int randCharIndex = rand.Next( 0, CHARACTER_SET.Length );
+                // char randChar = CHARACTER_SET[ 38 ];     // test with letter 'M'
+                // char randChar = CHARACTER_SET[ 42 ];     // test with letter 'Q'
+                // char randChar = CHARACTER_SET[ 48 ];     // test with letter 'W'
                 char randChar = CHARACTER_SET[ randCharIndex ];
 
                 FullTypewriterPhraseText += randChar;
             }
 
-            TextOverlay.Text = "";      // no text
+            TextOverlay.Text = "";      // reset: no "correct" text letters, yet
             TypewriterPhrase.Text = FullTypewriterPhraseText;
 
             SetUnderbarPosition();
@@ -84,19 +98,27 @@ namespace FlotsamTypist
             // Repeating number of characters in a string.  See:
             //
             // http://stackoverflow.com/questions/4115064/is-there-a-built-in-function-to-repeat-string-or-char-in-net
+            // https://stackoverflow.com/questions/22617486/is-there-a-spacen-method-in-c-net
             //
-            Underliner.Text = string.Join( "", Enumerable.Repeat( ' ', TextOverlay.Text.Length )) + UNDERBAR;
+            // Underliner.Text = string.Join( "", Enumerable.Repeat( ' ', TextOverlay.Text.Length )) + UNDERBAR;
+            Underliner.Text = new string( ' ', TextOverlay.Text.Length ) + UNDERBAR;
         }
 
         private void MainForm_KeyPress( object sender, KeyPressEventArgs e )
         {
+            if (ShowKeyboardHint && !string.IsNullOrWhiteSpace(KeyboardHint.Text))
+            {
+                const int asciiSpace = 32;
+                DisplayKeyboardHint( asciiSpace );
+            }
+
             switch (e.KeyChar)
             {
                 case (char) Keys.Escape:
                     e.Handled = true;
                     if (EscapeClosesApplication)
                     {
-                        this.Close();       // close the Form, end the application
+                        this.Close();   // close the Form, end the application
                     }
                     break;
 
@@ -109,11 +131,6 @@ namespace FlotsamTypist
                     e.Handled = true;
                     if (IsCorrectNextKey( e.KeyChar ))
                     {
-                        if (ShowKeyboardHint)
-                        {
-                            KeyboardHint.Text = "";
-                        }
-
                         bool anyCharsRemaining = AdvanceCorrectCharacter();
                         if (!anyCharsRemaining)
                         {
@@ -158,6 +175,9 @@ namespace FlotsamTypist
             Color originalTypewritePhraseColor = TypewriterPhrase.ForeColor;
             TypewriterPhrase.ForeColor = Color.Black;
 
+            Color originalKeyboardHintColor = KeyboardHint.ForeColor;
+            KeyboardHint.ForeColor = Color.Black;
+
             Color originalFormBackgroundColor = this.BackColor;
 
             BackColor = Color.White;
@@ -174,10 +194,11 @@ namespace FlotsamTypist
             // Pause, give the user time to see and ponder the color update.
             Thread.Sleep( milliseconds );
 
-            // Then revert back to the original background color.
+            // Then revert back to the original Form background, and text foreground, colors.
             TextOverlay.Text = originalTextOverlayText;
             TypewriterPhrase.Text = originalTypewritePhraseText;
             TypewriterPhrase.ForeColor = originalTypewritePhraseColor;
+            KeyboardHint.ForeColor = originalKeyboardHintColor;
 
             BackColor = originalFormBackgroundColor;
         }
@@ -203,8 +224,11 @@ namespace FlotsamTypist
             // Repeating number of characters in a string.  See:
             //
             // http://stackoverflow.com/questions/4115064/is-there-a-built-in-function-to-repeat-string-or-char-in-net
+            // https://stackoverflow.com/questions/22617486/is-there-a-spacen-method-in-c-net
             //
-            TypewriterPhrase.Text = string.Join( "", Enumerable.Repeat( ' ', TextOverlay.Text.Length )) 
+            // TypewriterPhrase.Text = string.Join( "", Enumerable.Repeat( ' ', TextOverlay.Text.Length )) 
+            //     + FullTypewriterPhraseText.Substring( numCorrectChars, FullTypewriterPhraseText.Length - numCorrectChars );
+            TypewriterPhrase.Text = new string( ' ', TextOverlay.Text.Length )
                 + FullTypewriterPhraseText.Substring( numCorrectChars, FullTypewriterPhraseText.Length - numCorrectChars );
             
             SetUnderbarPosition();
@@ -249,8 +273,9 @@ namespace FlotsamTypist
 
             float mistypedCharacterDisplayOffset = typewriterTextDisplaySize.Width;
             const int offsetFudgeFactor = 8;    // determined by experiment
+            int newXLocation = offsetFudgeFactor + (int) Math.Round( mistypedCharacterDisplayOffset, 0, MidpointRounding.AwayFromZero );
 
-            KeyboardHint.Location = new Point( offsetFudgeFactor + (int) mistypedCharacterDisplayOffset, KeyboardHint.Location.Y );
+            KeyboardHint.Location = new Point( newXLocation, KeyboardHint.Location.Y );
             KeyboardHint.Text = ((char) mistypedKey).ToString();    // show what the user mistyped
         }
 
@@ -267,6 +292,81 @@ namespace FlotsamTypist
             TypewriterPhrase.Location = new Point( TypewriterPhrase.Location.X, TypewriterPhrase.Location.Y + shiftAmount );
             Underliner.Location = new Point( Underliner.Location.X, Underliner.Location.Y + shiftAmount );
             KeyboardHint.Location = new Point( KeyboardHint.Location.X, KeyboardHint.Location.Y + shiftAmount );
+        }
+
+        private int DetermineNumCharsToDisplay()
+        {
+            int numCharactersToDisplay = AppSettings.Get< int >( "NumCharactersToDisplay" );
+
+            // Lower bound check.
+            if (numCharactersToDisplay < MIN_NUM_CHARS)
+            {
+                numCharactersToDisplay = MIN_NUM_CHARS;
+            }
+
+            // Upper bound check.
+            if (numCharactersToDisplay > MAX_NUM_CHARS)
+            {
+                numCharactersToDisplay = MAX_NUM_CHARS;
+            }
+
+            return numCharactersToDisplay;
+        }
+
+
+        /// <summary>
+        /// Scale the Text labels, proportionally to the number of monospace characters
+        /// being displayed.
+        /// </summary>
+        private void SetTextPhraseWidths( int numCharactersToDisplay )
+        {
+            // Temporarily: use a wide letter (eg. 'W') and construct a display string of
+            // the user-requested length.  For a monospace font it actually shouldn't matter
+            // which letter we use, but 'W' clearly displays the width (during debugging).
+            TypewriterPhrase.Text = new string( 'W', NumCharactersToDisplay );
+
+            // Measure the width of the string.
+            SizeF typewriterTextDisplaySize;
+            using( Graphics g = TypewriterPhrase.CreateGraphics() )
+            {
+                typewriterTextDisplaySize = g.MeasureString(TypewriterPhrase.Text, TypewriterPhrase.Font);
+            }
+
+            int characterDisplayWidth = (int) Math.Round( typewriterTextDisplaySize.Width, MidpointRounding.AwayFromZero );
+
+            // Use the width to scale all the Text overlay labels.
+            TypewriterPhrase.Size = new Size( characterDisplayWidth, TypewriterPhrase.Size.Height );
+            TextOverlay.Size = new Size( characterDisplayWidth, TextOverlay.Size.Height );
+            Underliner.Size = new Size( characterDisplayWidth, Underliner.Size.Height );
+        }
+
+        private void SetFormDisplayWidth( int numCharactersToDisplay )
+        {
+            // Hijack the 'TypewriterPhrase' control, to figure out the width to use to set
+            // the MainForm to.  This is somewhat of a kluge, but other more sane attempts to
+            // set the MainForm width were not particularly reliable.  It was hard to find
+            // an approach that worked properly across the entire range of MIN_NUM_CHARS and
+            // MAX_NUM_CHARS without looking wonky.  The approach I finally settled on here,
+            // at least works well.
+            TypewriterPhrase.Text = new string( 'M', NumCharactersToDisplay );      // artifically set the display width
+
+            // Figure out how wide the TypewriterPhrase.Text really is.
+            SizeF typewriterTextDisplaySize;
+            using( Graphics g = TypewriterPhrase.CreateGraphics() )
+            {
+                typewriterTextDisplaySize = g.MeasureString(TypewriterPhrase.Text, TypewriterPhrase.Font);
+            }
+
+            // Set the MainForm width to be as wide as the TypewriterPhrase display width,
+            // plus some padding (margin) on each side.
+            int margin = TypewriterPhrase.Location.X;
+
+            int mainFormClientWidth = 
+                (int) Math.Round( typewriterTextDisplaySize.Width + 2 * margin, 0, MidpointRounding.AwayFromZero );     // same margin on both sides
+
+            this.ClientSize = new Size( mainFormClientWidth, this.ClientSize.Height );
+
+            TypewriterPhrase.Text = "";   // reset
         }
 
     }

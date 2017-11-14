@@ -40,7 +40,7 @@
             this.TextOverlay.ForeColor = System.Drawing.Color.MediumSeaGreen;
             this.TextOverlay.Location = new System.Drawing.Point(28, 32);
             this.TextOverlay.Name = "TextOverlay";
-            this.TextOverlay.Size = new System.Drawing.Size(220, 32);
+            this.TextOverlay.Size = new System.Drawing.Size(775, 32);
             this.TextOverlay.TabIndex = 2;
             this.TextOverlay.TabStop = false;
             this.TextOverlay.TextAlign = System.Drawing.ContentAlignment.TopLeft;
@@ -51,10 +51,10 @@
             this.TypewriterPhrase.ForeColor = System.Drawing.Color.Khaki;
             this.TypewriterPhrase.Location = new System.Drawing.Point(28, 32);
             this.TypewriterPhrase.Name = "TypewriterPhrase";
-            this.TypewriterPhrase.Size = new System.Drawing.Size(220, 32);
+            this.TypewriterPhrase.Size = new System.Drawing.Size(775, 32);
             this.TypewriterPhrase.TabIndex = 0;
             this.TypewriterPhrase.TabStop = false;
-            this.TypewriterPhrase.Text = "YMMMMMMMMMMMMY";
+            this.TypewriterPhrase.Text = "YMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMY";
             this.TypewriterPhrase.TextAlign = System.Drawing.ContentAlignment.TopLeft;
             // 
             // Underliner
@@ -63,7 +63,7 @@
             this.Underliner.ForeColor = System.Drawing.Color.Crimson;
             this.Underliner.Location = new System.Drawing.Point(28, 34);
             this.Underliner.Name = "Underliner";
-            this.Underliner.Size = new System.Drawing.Size(220, 41);
+            this.Underliner.Size = new System.Drawing.Size(775, 41);
             this.Underliner.TabIndex = 1;
             this.Underliner.TabStop = false;
             this.Underliner.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
@@ -84,7 +84,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Black;
-            this.ClientSize = new System.Drawing.Size(276, 104);
+            this.ClientSize = new System.Drawing.Size(826, 104);
             this.Controls.Add(this.TextOverlay);
             this.Controls.Add(this.TypewriterPhrase);
             this.Controls.Add(this.Underliner);
