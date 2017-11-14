@@ -58,6 +58,13 @@ namespace FlotsamTypist
             SetTextPhraseWidths( NumCharactersToDisplay );
             SetFormDisplayWidth( NumCharactersToDisplay );
 
+            // Find out where the user wants the Form to appear.
+            int formXOffset = AppSettings.Get< int >( "FormXPositionInPixels", 50 );
+            int formYOffset = AppSettings.Get< int >( "FormYPositionInPixels", 50 );
+
+            StartPosition = FormStartPosition.Manual;
+            Location = new Point(formXOffset, formYOffset);
+
             DoAnotherPhrase();
         }
 
@@ -369,6 +376,10 @@ namespace FlotsamTypist
             TypewriterPhrase.Text = "";   // reset
         }
 
+        private void MainForm_Load( object sender, EventArgs e )
+        {
+
+        }
     }
 
     // Read a value from App.config. See:
